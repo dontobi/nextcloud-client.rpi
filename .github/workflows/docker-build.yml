@@ -11,6 +11,9 @@ on:
 jobs:
   build:
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
     steps:
       - name: Checkout (main)
         uses: actions/checkout@v4
@@ -25,8 +28,6 @@ jobs:
           DATI="$(date --rfc-3339=seconds | sed 's/ /T/')"
           echo "version=$VERSION" >> $GITHUB_ENV
           echo "dati=$DATI" >> $GITHUB_ENV
-          sed -e "s/\${VERSION}/$VERSION/" -e "s/\${DATI}/$DATI/" ./Dockerfile > ./Dockerfile.tmp
-          mv -f ./Dockerfile.tmp ./Dockerfile
 
       - name: Set up QEMU
         uses: docker/setup-qemu-action@v3.6.0
@@ -41,13 +42,80 @@ jobs:
           username: ${{ secrets.DOCKER_USER }}
           password: ${{ secrets.DOCKER_PASS }}
 
-      - name: Build Docker image
+      - name: Login to GitHub Container Registry
+        uses: docker/login-action@v3.4.0
+        with:
+          registry: ghcr.io
+          username: dontobi
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Build and Load Docker image
+        id: build_and_load
+        uses: docker/build-push-action@v6.16.0
+        with:
+          context: .
+          file: ./Dockerfile
+          push: false
+          load: true
+          platforms: linux/arm/v7,linux/arm64
+          build-args: |
+            VERSION=${{ env.version }}
+            DATI=${{ env.dati }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+          tags: |
+            dontobi/nextcloud-client.rpi:${{ env.version }},
+            dontobi/nextcloud-client.rpi:latest,
+            ghcr.io/dontobi/nextcloud-client.rpi:${{ env.version }},
+            ghcr.io/dontobi/nextcloud-client.rpi:latest
+
+      - name: Test Docker Container
+        run: |
+          IMAGE_TO_TEST="dontobi/nextcloud-client.rpi:${{ env.version }}"
+          CONTAINER_NAME="test-nextcloud-client"
+          echo "Attempting to run container $CONTAINER_NAME from image $IMAGE_TO_TEST"
+          docker run -d --name $CONTAINER_NAME $IMAGE_TO_TEST
+          
+          echo "Waiting for container to initialize..."
+          sleep 15
+          
+          if ! docker ps -f name=$CONTAINER_NAME | grep -q $CONTAINER_NAME; then
+            echo "Error: Container $CONTAINER_NAME failed to stay running."
+            echo "--- Container Logs ---"
+            docker logs $CONTAINER_NAME || echo "Could not retrieve logs for $CONTAINER_NAME."
+            docker rm $CONTAINER_NAME || echo "Could not remove $CONTAINER_NAME."
+            exit 1
+          fi
+          
+          echo "Container $CONTAINER_NAME is running. Checking logs for startup message..."
+          if ! docker logs $CONTAINER_NAME 2>&1 | grep -q "Starting Nextcloud client..."; then
+            echo "Error: Startup message 'Starting Nextcloud client...' not found in logs for $CONTAINER_NAME."
+            echo "--- Container Logs ---"
+            docker logs $CONTAINER_NAME
+            docker stop $CONTAINER_NAME
+            docker rm $CONTAINER_NAME
+            exit 1
+          fi
+          
+          echo "Container test successful: $CONTAINER_NAME started and startup message found."
+          docker stop $CONTAINER_NAME
+          docker rm $CONTAINER_NAME
+
+      - name: Push Docker image
+        if: success()
         uses: docker/build-push-action@v6.16.0
         with:
           context: .
           file: ./Dockerfile
           push: true
           platforms: linux/arm/v7,linux/arm64
+          build-args: |
+            VERSION=${{ env.version }}
+            DATI=${{ env.dati }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
           tags: |
             dontobi/nextcloud-client.rpi:${{ env.version }},
-            dontobi/nextcloud-client.rpi:latest
+            dontobi/nextcloud-client.rpi:latest,
+            ghcr.io/dontobi/nextcloud-client.rpi:${{ env.version }},
+            ghcr.io/dontobi/nextcloud-client.rpi:latest

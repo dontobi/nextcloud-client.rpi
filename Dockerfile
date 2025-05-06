@@ -1,5 +1,9 @@
+# Set Initial Arguments
+ARG VERSION
+ARG DATI
+
 # Set base image
-FROM alpine:latest
+FROM alpine:3.19
 
 # Set container label
 LABEL org.opencontainers.image.title="Nextcloud-Client Docker Image" \
@@ -8,11 +12,9 @@ LABEL org.opencontainers.image.title="Nextcloud-Client Docker Image" \
       org.opencontainers.image.authors="Tobias Schug <github@myhome.zone>" \
       org.opencontainers.image.url="https://github.com/dontobi/nextcloud-client.rpi" \
       org.opencontainers.image.source="https://github.com/dontobi/nextcloud-client.rpi" \
-      org.opencontainers.image.base.name="docker.io/library/alpine:latest" \
+      org.opencontainers.image.base.name="docker.io/library/alpine:3.19" \
       org.opencontainers.image.version="${VERSION}" \
       org.opencontainers.image.created="${DATI}"
-
-# Set Volumes
 
 # Set Arguments
 ARG USER=ncsync
@@ -37,10 +39,14 @@ ENV USER=$USER \
 # Building
 # create group and user
 RUN addgroup -g $USER_GID $USER && adduser -G $USER -D -u $USER_UID $USER
+
 # update repositories and install nextcloud-client
-RUN apk -U --no-cache add nextcloud-client moreutils && rm -rf /etc/apk/cache
+RUN apk -U --no-cache add nextcloud-client moreutils
+
 # add run script
-ADD run.sh /usr/bin/run.sh
+COPY run.sh /usr/bin/run.sh
+RUN chmod +x /usr/bin/run.sh
 
 # Entrypoint
+USER $USER
 CMD /usr/bin/run.sh

@@ -13,7 +13,7 @@ jobs:
         id: check
         uses: mkumatag/container-image-updater-action@v1.0.6
         with:
-          base-image: 'library/alpine:latest'
+          base-image: 'library/alpine:3.19'
           image: 'dontobi/nextcloud-client.rpi:latest'
 
       - name: Image update
