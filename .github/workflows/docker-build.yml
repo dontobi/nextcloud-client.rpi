@@ -64,15 +64,19 @@ jobs:
           cache-from: type=gha
           cache-to: type=gha,mode=max
           tags: |
-            dontobi/nextcloud-client.rpi:${{ env.version }},
             ghcr.io/dontobi/nextcloud-client.rpi:${{ env.version }}
 
       - name: Test Docker Container
         run: |
-          IMAGE_TO_TEST="dontobi/nextcloud-client.rpi:${{ env.version }}"
+          IMAGE_TO_TEST="ghcr.io/dontobi/nextcloud-client.rpi:${{ env.version }}"
           CONTAINER_NAME="test-nextcloud-client"
           echo "Attempting to run container $CONTAINER_NAME from image $IMAGE_TO_TEST"
-          docker run -d --name $CONTAINER_NAME $IMAGE_TO_TEST
+          docker run \
+            -e NC_USER="${{ secrets.NC_USER_TEST }}" \
+            -e NC_PASS="${{ secrets.NC_PASS_TEST }}" \
+            -e NC_URL="${{ secrets.NC_URL_TEST }}" \
+            -d --name $CONTAINER_NAME \
+            $IMAGE_TO_TEST
           
           echo "Waiting for container to initialize..."
           sleep 15
