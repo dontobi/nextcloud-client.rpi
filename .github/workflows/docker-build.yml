@@ -75,6 +75,8 @@ jobs:
             -e NC_USER="${{ secrets.NC_USER_TEST }}" \
             -e NC_PASS="${{ secrets.NC_PASS_TEST }}" \
             -e NC_URL="${{ secrets.NC_URL_TEST }}" \
+            -v nextcloud-test-media:/media/nextcloud \
+            -v nextcloud-test-data:/settings \
             -d --name $CONTAINER_NAME \
             $IMAGE_TO_TEST
           
