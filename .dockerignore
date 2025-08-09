@@ -1,20 +1,31 @@
+# Git-Versionierung
 .git
-Dockerfile
-*~
-README.md
-
-# Docker specific
-.dockerignore
 .gitignore
 
-# Log files
-*.log
+# Dokumentation
+# READMEs und andere Markdown-Dateien werden im Image nicht benötigt.
+*.md
 
-# Python cache files (if applicable)
-__pycache__/
-*.pyc
-*.pyo
+# Docker-spezifische Dateien
+# Das Dockerfile und die .dockerignore-Datei selbst gehören nicht in den Build-Kontext.
+.dockerignore
+Dockerfile
+
+# GitHub Actions
+# Workflow-Dateien sind für den Build nicht erforderlich.
+.github/
+
+# Konfigurationsordner für Editoren/IDEs
+.idea/
+.vscode/
 
 # OS-specific files
 .DS_Store
 Thumbs.db
+
+# Log-Dateien
+*.log
+
+# Temporäre Dateien und Backups
+*~
+*.swp

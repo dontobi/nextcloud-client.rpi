@@ -1,5 +1,3 @@
-# Github action to build Docker image from main branch (tag: latest)
-
 name: Build Container
 
 on:
