@@ -22,15 +22,15 @@ getent passwd "$USER_UID" > /dev/null || adduser -u "$USER_UID" "$USER" -D -H -G
 chown -R "$USER_UID":"$USER_GID" /settings
 
 if [ -e "/settings/exclude" ]; then
-	EXCLUDE="/settings/exclude"
+  EXCLUDE="/settings/exclude"
 else
-	echo "[ info ]: Exclude file /settings/exclude not found." | ts "${LOG_DATE_FORMAT}"
+  echo "[ info ]: Exclude file /settings/exclude not found." | ts "${LOG_DATE_FORMAT}"
 fi
 
 if [ -e "/settings/unsyncfolders" ]; then
-	UNSYNCEDFOLDERS="/settings/unsyncfolders"
+  UNSYNCEDFOLDERS="/settings/unsyncfolders"
 else
-	echo "[ info ]: Unsyncedfolders file /settings/unsyncfolders not found." | ts "${LOG_DATE_FORMAT}"
+  echo "[ info ]: Unsyncedfolders file /settings/unsyncfolders not found." | ts "${LOG_DATE_FORMAT}"
 fi
 
 [ -n "$NC_PATH" ] && echo "[ info ]: Remote root folder overridden to '$NC_PATH'" | ts "${LOG_DATE_FORMAT}"
@@ -40,28 +40,27 @@ fi
 
 echo "[ info ]: Starting Nextcloud client..." | ts "${LOG_DATE_FORMAT}"
 
-while true
-do
-	[ "$NC_SILENT" = "true" ] && echo "[ info ]: Start sync from '$NC_URL' to '$NC_SOURCE_DIR'" | ts "${LOG_DATE_FORMAT}"
+while true; do
+  [ "$NC_SILENT" = "true" ] && echo "[ info ]: Start sync from '$NC_URL' to '$NC_SOURCE_DIR'" | ts "${LOG_DATE_FORMAT}"
 
-	set --
-	[ "$NC_HIDDEN" = "true" ] && set -- "$@" "-h"
-	[ "$NC_SILENT" = "true" ] && set -- "$@" "--silent"
-	[ "$NC_TRUST_CERT" = "true" ] && set -- "$@" "--trust"
-	[ -n "$NC_PATH" ] && set -- "$@" "--path" "$NC_PATH"
-	[ -n "$EXCLUDE" ] && set -- "$@" "--exclude" "$EXCLUDE"
-	[ -n "$UNSYNCEDFOLDERS" ] && set -- "$@" "--unsyncedfolders" "$UNSYNCEDFOLDERS"
-	set -- "$@" "--non-interactive" "-u" "$NC_USER" "-p" "$NC_PASS" "$NC_SOURCE_DIR" "$NC_URL"
-	nextcloudcmd "$@"
+  set --
+  [ "$NC_HIDDEN" = "true" ] && set -- "$@" "-h"
+  [ "$NC_SILENT" = "true" ] && set -- "$@" "--silent"
+  [ "$NC_TRUST_CERT" = "true" ] && set -- "$@" "--trust"
+  [ -n "$NC_PATH" ] && set -- "$@" "--path" "$NC_PATH"
+  [ -n "$EXCLUDE" ] && set -- "$@" "--exclude" "$EXCLUDE"
+  [ -n "$UNSYNCEDFOLDERS" ] && set -- "$@" "--unsyncedfolders" "$UNSYNCEDFOLDERS"
+  set -- "$@" "--non-interactive" "-u" "$NC_USER" "-p" "$NC_PASS" "$NC_SOURCE_DIR" "$NC_URL"
+  nextcloudcmd "$@"
 
-	[ "$NC_SILENT" = "true" ] && echo "[ info ]: Sync done" | ts "${LOG_DATE_FORMAT}"
+  [ "$NC_SILENT" = "true" ] && echo "[ info ]: Sync done" | ts "${LOG_DATE_FORMAT}"
 
-	if [ "$NC_EXIT" = true ] ; then
-		if [ "$NC_SILENT" != "true" ] ; then
-			echo "[ info ]: NC_EXIT is true so exiting... bye!" | ts "${LOG_DATE_FORMAT}"
-		fi
-		exit
-	fi
-	echo "[ info ]: Wait ${NC_INTERVAL:-60}s until next sync" | ts "${LOG_DATE_FORMAT}"
-	sleep "${NC_INTERVAL:-60}"
+  if [ "$NC_EXIT" = true ]; then
+    if [ "$NC_SILENT" != "true" ]; then
+      echo "[ info ]: NC_EXIT is true so exiting... bye!" | ts "${LOG_DATE_FORMAT}"
+    fi
+    exit
+  fi
+  echo "[ info ]: Wait ${NC_INTERVAL:-60}s until next sync" | ts "${LOG_DATE_FORMAT}"
+  sleep "${NC_INTERVAL:-60}"
 done
